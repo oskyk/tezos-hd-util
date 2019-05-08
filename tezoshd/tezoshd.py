@@ -97,7 +97,6 @@ class Transaction(object):
     def serialize(self):
         result = hexlify(b58decode_check(self.branch)).decode()[4:]
         result += '08'  # tag for tx
-        result += '0000'  # source version
         result += self._cleaned_address(self.source)
         result += numToZarith(self.fee)
         result += numToZarith(self.counter)
