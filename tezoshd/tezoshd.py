@@ -13,8 +13,32 @@ TZ_VERSION = {
 }
 
 
+
+def b58_sig(sig):
+    return b58encode_check(b'\rse\x13?' + unhexlify(sig))
+
+
+def scrub_input(v) -> bytes:
+    if isinstance(v, str) and not isinstance(v, bytes):
+        try:
+            _ = int(v, 16)
+        except ValueError:
+            v = v.encode('ascii')
+        else:
+            if v.startswith('0x'):
+                v = v[2:]
+            v = bytes.fromhex(v)
+
+    if not isinstance(v, bytes):
+        raise TypeError(
+            "a bytes-like object is required (also str), not '%s'" %
+            type(v).__name__)
+
+    return v
+
+
 def blake2b_32(v=b''):
-    return blake2b(v, digest_size=32)
+    return blake2b(scrub_input(v), digest_size=32)
 
 
 def numToZarith(num):
@@ -116,4 +140,53 @@ class Transaction(object):
         return hexlify(signature)
 
     def signed(self, key):
-        return self.serialize() + self.signature(key)
+        return self.serialize() + self.signature(key).decode()
+
+    def b58_signature(self, key):
+        return b58_sig(self.signature(key))
+
+
+class Revelation(object):
+    def __init__(self, branch, source, fee, counter, gas_limit, storage_limit, public_key):
+        self.branch = branch
+        self.source = source
+        self.fee = fee
+        self.counter = counter
+        self.gas_limit = gas_limit
+        self.storage_limit = storage_limit
+        self.public_key = public_key
+
+    def _cleaned_address(self, addr):
+        if addr[:2] == 'tz':
+            return TZ_VERSION[addr[:3]] + hexlify(b58decode_check(addr)).decode()[6:]
+        elif addr[:2] == 'KT':
+            return '01' + hexlify(b58decode_check(addr)).decode()[6:] + '00'
+        else:
+            raise KeyError('Unknown address: {}'.format(addr))
+
+    def serialize(self):
+        result = hexlify(b58decode_check(self.branch)).decode()[4:]
+        result += '07'  # tag for tx
+        result += self._cleaned_address(self.source)
+        result += numToZarith(self.fee)
+        result += numToZarith(self.counter)
+        result += numToZarith(self.gas_limit)
+        result += numToZarith(self.storage_limit)
+        result += '01'
+        result += self.public_key
+        return result
+
+    def signature(self, key):
+        raw_tx = self.serialize()
+        sk_str = b58decode_check(key)[4:]
+        pk = secp256k1.PrivateKey(sk_str)
+        signature = pk.ecdsa_serialize_compact(
+            pk.ecdsa_sign(b'\x03' + unhexlify(raw_tx), digest=blake2b_32))
+        return hexlify(signature)
+
+    def signed(self, key):
+        return self.serialize() + self.signature(key).decode()
+
+    def b58_signature(self, key):
+        return b58_sig(self.signature(key))
+
