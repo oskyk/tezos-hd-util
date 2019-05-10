@@ -59,23 +59,33 @@ def numToZarith(num):
     return result
 
 
+def setup_btcpy(network):
+    btcpy.setup.MAINNET = None
+    btcpy.setup.NETWORK = None
+    btcpy.setup.setup(network)
+
+
 class XPrv(object):
     def __init__(self, key):
-        btcpy.setup.setup('mainnet')
+        setup_btcpy('mainnet')
         self.key = ExtendedPrivateKey.decode(key)
 
     def derive(self, path):
+        setup_btcpy('mainnet')
         return XPrv(self.key.derive(path).encode())
 
     def prv(self):
+        setup_btcpy('mainnet')
         spsk = b'\x11\xa2\xe0\xc9'
         return b58encode_check(spsk + self.key.key.serialize())
 
     def pub(self):
+        setup_btcpy('mainnet')
         sppk = b'\x03\xfe\xe2V'
         return b58encode_check(sppk + self.key.key.pub().serialize())
 
     def pkh(self):
+        setup_btcpy('mainnet')
         tz2 = b'\x06\xa1\xa1'
         pkh = blake2b(data=self.key.key.pub().serialize(), digest_size=20).digest()
         return b58encode_check(tz2 + pkh)
@@ -83,17 +93,20 @@ class XPrv(object):
 
 class XPub(object):
     def __init__(self, key):
-        btcpy.setup.setup('mainnet')
+        setup_btcpy('mainnet')
         self.key = ExtendedPublicKey.decode(key)
 
     def derive(self, path):
+        setup_btcpy('mainnet')
         return XPub(self.key.derive(path).encode())
 
-    def prv(self):
+    def pub(self):
+        setup_btcpy('mainnet')
         sppk = b'\x03\xfe\xe2V'
         return b58encode_check(sppk + self.key.key.serialize())
 
     def pkh(self):
+        setup_btcpy('mainnet')
         tz2 = b'\x06\xa1\xa1'
         pkh = blake2b(data=self.key.key.serialize(), digest_size=20).digest()
         return b58encode_check(tz2 + pkh)
