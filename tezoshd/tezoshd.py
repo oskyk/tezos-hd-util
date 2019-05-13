@@ -2,7 +2,7 @@ from base58 import b58encode_check, b58decode_check
 from pyblake2 import blake2b
 import btcpy
 from binascii import hexlify, unhexlify
-from btcpy.structs.hd import ExtendedPrivateKey, ExtendedPublicKey
+from btcpy.structs.hd import ExtendedPrivateKey, ExtendedPublicKey, PrivateKey
 import secp256k1
 
 
@@ -63,6 +63,14 @@ def setup_btcpy(network):
     btcpy.setup.MAINNET = None
     btcpy.setup.NETWORK = None
     btcpy.setup.setup(network)
+
+
+def priv2pub(priv):
+    setup_btcpy('mainnet')
+    priv_hex = hexlify(b58decode_check(priv)[:4])
+    pk = PrivateKey.unhexlify(priv_hex)
+    sppk = b'\x03\xfe\xe2V'
+    return b58encode_check(sppk + pk.pub().serialize())
 
 
 class XPrv(object):
@@ -160,7 +168,7 @@ class Transaction(object):
 
 
 class Revelation(object):
-    def __init__(self, branch, source, fee, counter, gas_limit, storage_limit, public_key):
+    def __init__(self, branch, source, fee, counter, gas_limit, storage_limit, public_key, amount, destination):
         self.branch = branch
         self.source = source
         self.fee = fee
@@ -168,6 +176,8 @@ class Revelation(object):
         self.gas_limit = gas_limit
         self.storage_limit = storage_limit
         self.public_key = public_key
+        self.amount = amount
+        self.destination = destination
 
     def _cleaned_address(self, addr):
         if addr[:2] == 'tz':
@@ -179,7 +189,7 @@ class Revelation(object):
 
     def serialize(self):
         result = hexlify(b58decode_check(self.branch)).decode()[4:]
-        result += '07'  # tag for tx
+        result += '07'  # tag for revelation
         result += self._cleaned_address(self.source)
         result += numToZarith(self.fee)
         result += numToZarith(self.counter)
@@ -187,6 +197,15 @@ class Revelation(object):
         result += numToZarith(self.storage_limit)
         result += '01'
         result += self.public_key
+        result += '08'  # tag for tx
+        result += self._cleaned_address(self.source)
+        result += numToZarith(self.fee)
+        result += numToZarith(self.counter + 1)
+        result += numToZarith(self.gas_limit)
+        result += numToZarith(self.storage_limit)
+        result += numToZarith(self.amount)
+        result += self._cleaned_address(self.destination)
+        result += '00'  # params
         return result
 
     def signature(self, key):
