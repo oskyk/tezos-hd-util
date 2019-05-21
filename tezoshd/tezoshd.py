@@ -13,7 +13,6 @@ TZ_VERSION = {
 }
 
 
-
 def b58_sig(sig):
     return b58encode_check(b'\rse\x13?' + unhexlify(sig))
 
@@ -67,7 +66,7 @@ def setup_btcpy(network):
 
 def priv2pub(priv):
     setup_btcpy('mainnet')
-    priv_hex = hexlify(b58decode_check(priv)[:4])
+    priv_hex = hexlify(b58decode_check(priv)[4:])
     pk = PrivateKey.unhexlify(priv_hex)
     sppk = b'\x03\xfe\xe2V'
     return b58encode_check(sppk + pk.pub().serialize())
@@ -191,15 +190,15 @@ class Revelation(object):
         result = hexlify(b58decode_check(self.branch)).decode()[4:]
         result += '07'  # tag for revelation
         result += self._cleaned_address(self.source)
-        result += numToZarith(self.fee)
+        result += numToZarith(round(self.fee / 2))
         result += numToZarith(self.counter)
         result += numToZarith(self.gas_limit)
         result += numToZarith(self.storage_limit)
         result += '01'
-        result += self.public_key
+        result += hexlify(b58decode_check(self.public_key)).decode()[8:]
         result += '08'  # tag for tx
         result += self._cleaned_address(self.source)
-        result += numToZarith(self.fee)
+        result += numToZarith(round(self.fee / 2))
         result += numToZarith(self.counter + 1)
         result += numToZarith(self.gas_limit)
         result += numToZarith(self.storage_limit)
