@@ -2,7 +2,7 @@ from distutils.core import setup
 from setuptools import find_packages
 
 setup(name='tezos-hd-util',
-      version='0.1.3',
+      version='0.1.4',
       packages=find_packages(),
       install_requires=['chainside-btcpy-multi==0.2.78', 'pyblake2==1.1.2', 'secp256k1new==0.13.2'],
       description='Python tool for for tezos hd generation',
