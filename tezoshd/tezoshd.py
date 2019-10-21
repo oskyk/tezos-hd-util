@@ -1,8 +1,8 @@
-from base58 import b58encode_check, b58decode_check
 from pyblake2 import blake2b
 import btcpy
 from binascii import hexlify, unhexlify
 from btcpy.structs.hd import ExtendedPrivateKey, ExtendedPublicKey, PrivateKey
+from btcpy.lib.base58 import b58decode_check, b58encode_check
 import secp256k1
 
 
