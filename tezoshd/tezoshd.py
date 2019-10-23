@@ -7,9 +7,9 @@ import secp256k1
 
 
 TZ_VERSION = {
-    'tz1': '0000',
-    'tz2': '0001',
-    'tz3': '0002'
+    'tz1': '00',
+    'tz2': '01',
+    'tz3': '02'
 }
 
 
@@ -140,13 +140,14 @@ class Transaction(object):
 
     def serialize(self):
         result = hexlify(b58decode_check(self.branch)).decode()[4:]
-        result += '08'  # tag for tx
+        result += '6c'  # tag for tx
         result += self._cleaned_address(self.source)
         result += numToZarith(self.fee)
         result += numToZarith(self.counter)
         result += numToZarith(self.gas_limit)
         result += numToZarith(self.storage_limit)
         result += numToZarith(self.amount)
+        result += '00'
         result += self._cleaned_address(self.destination)
         result += '00'  # params
         return result
@@ -188,7 +189,7 @@ class Revelation(object):
 
     def serialize(self):
         result = hexlify(b58decode_check(self.branch)).decode()[4:]
-        result += '07'  # tag for revelation
+        result += '6b'  # tag for revelation
         result += self._cleaned_address(self.source)
         result += numToZarith(round(self.fee / 2))
         result += numToZarith(self.counter)
@@ -196,13 +197,14 @@ class Revelation(object):
         result += numToZarith(self.storage_limit)
         result += '01'
         result += hexlify(b58decode_check(self.public_key)).decode()[8:]
-        result += '08'  # tag for tx
+        result += '6c'  # tag for tx
         result += self._cleaned_address(self.source)
         result += numToZarith(round(self.fee / 2))
         result += numToZarith(self.counter + 1)
         result += numToZarith(self.gas_limit)
         result += numToZarith(self.storage_limit)
         result += numToZarith(self.amount)
+        result += '00'
         result += self._cleaned_address(self.destination)
         result += '00'  # params
         return result
