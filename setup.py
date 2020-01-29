@@ -2,7 +2,7 @@ from distutils.core import setup
 from setuptools import find_packages
 
 setup(name='tezos-hd-util',
-      version='0.1.6',
+      version='0.1.7',
       packages=find_packages(),
       install_requires=[
             'chainside-btcpy-multi>=0.2.78,<0.3.0',
